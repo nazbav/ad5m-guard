@@ -1,0 +1,13 @@
+# Набор моделей AD5M Guard и их калибровка (tools/acceptance.py, 26.09.2026; отчёт — docs/acceptance.md).
+# Брак: YOLO26s + RF-DETR small; засчитывается, только если обе нашли его на одном месте («and»).
+# На 72 ч записей и 24 ч отложенных печатей — 0 ложных остановок при любом пороге от 0.2 до 0.7.
+defects: defects.onnx
+second: defects_rfdetr.onnx
+fusion: and
+gate_conf: 0.2            # RF-DETR запускается, только если YOLO видит важный класс не ниже этого
+scene: scene.onnx
+recommended:
+  defect_conf: 0.25
+  window: 5
+  min_hits: 3
+calibration: "2026-09-27"      # сменилась — у пользователей порог и правило обновятся на recommended

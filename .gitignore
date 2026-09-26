@@ -1,0 +1,23 @@
+# секреты (ключ Roboflow и т.п.) — только в .env, образец — .env.example
+.env
+
+# окружения
+.venv/
+.venv-build/
+.venv-rfdetr/
+__pycache__/
+.pytest_cache/
+
+# данные, записи, веса — большие; модели для exe — в архиве релиза
+/data/
+/runs/
+/weights/
+/models/
+/dist/
+*.log
+
+# сборка: всё, кроме файла калибровки набора моделей (сами модели — в архиве релиза)
+/build/*
+!/build/models/
+/build/models/*
+!/build/models/models.yaml

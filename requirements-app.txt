@@ -1,0 +1,15 @@
+# Зависимости приложения AD5M Guard (exe). Без PyTorch и Ultralytics: модели — ONNX.
+onnxruntime>=1.18
+numpy>=1.26
+opencv-python-headless>=4.9
+pillow>=10
+flask>=3.0
+requests>=2.31
+pyyaml>=6.0
+pystray>=0.19
+# сборка и тесты
+pyinstaller>=6.6
+pytest>=8
+
+# только для сборки
+pyflakes

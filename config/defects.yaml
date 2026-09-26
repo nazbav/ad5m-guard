@@ -1,0 +1,40 @@
+# Модель брака: что идёт не так с самой печатью.
+# Учится на всех картинках — кадрах AD5M и фото из интернета.
+#
+# Порядок names задаёт id класса в модели и в разметке: после первой обученной
+# модели существующие классы не переставлять, новые добавлять только в конец.
+names:
+  - spaghetti   # спагетти: модель сорвало, пластик идёт в воздух
+  - stringing   # струны и паутина
+  - warping     # коробление, отлип углов от стола
+  - cracks      # трещины, расслоение по слоям
+  - garbage     # сопли и мусор на столе / на модели
+  - detached    # модель уехала / сорвана со стола — разметки пока нет, класс под новую
+
+only_own: false
+
+# Классы датасета Roboflow (проект разметки AD5M) → классы модели.
+# null — разметку этого класса выбросить, картинка остаётся.
+roboflow_map:
+  __ER_SPAGHETTI: spaghetti
+  __ER_STRINGING: stringing
+  __ER_WEB: stringing
+  __ER_WARPING: warping
+  __ER_CRACKS: cracks
+  __ER_GARBAGE: garbage
+  # Стол, голова, установка пластины и руки — это модель сцены (scene.yaml).
+  # Здесь они только мешают: на интернетных фото те же объекты не размечены.
+  PEI_PLATE: null
+  PRINTER_HEAD: null
+  TEST_FILAMENT_LINE: null
+  __ER_PEI_SET: null
+  __ER_PEOPLE_HAND: null
+  # Новая разметка (extract_frames.py) ведётся сразу в классах обеих моделей:
+  # свои классы переходят сами в себя, классы сцены отбрасываются.
+  pei_plate: null
+  printer_head: null
+  pei_misplaced: null
+  test_line: null
+  hand: null
+  head_no_cover: null
+  glass_plate: null

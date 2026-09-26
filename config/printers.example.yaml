@@ -1,0 +1,22 @@
+# Конфиг сервиса monitor.py. Скопируйте в config/printers.yaml и заполните.
+
+interval_s: 5          # как часто опрашивать каждый принтер
+action: pause          # при тревоге: pause | cancel | none (только уведомить)
+only_when_printing: true
+
+# Когда тревога (см. ddet/watch.py)
+defect_conf: 0.4       # порог уверенности модели брака
+scene_conf: 0.4        # порог уверенности модели сцены
+window: 5              # сколько последних проверок смотреть
+min_hits: 3            # сколько из них должны показать проблему
+cooldown_s: 600        # не повторять одну и ту же тревогу чаще
+notify_only: [garbage, stringing]   # только уведомить, печать не останавливать
+muted: [pei_misplaced]              # не поднимать тревогу (модель ещё не выучила)
+
+printers:
+  - name: ad5m-01
+    host: 192.168.0.108
+    serial: SNMOMC0000000      # серийный номер: меню принтера → «О принтере»
+    check_code: 00000000       # код доступа: меню «Сеть» → «Только LAN»
+    # api_port: 8898
+    # camera: http://192.168.0.108:8080/?action=snapshot

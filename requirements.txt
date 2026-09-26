@@ -1,0 +1,10 @@
+# PyTorch с CUDA ставится отдельно (install.bat), чтобы pip не притащил CPU-сборку.
+ultralytics>=8.4
+opencv-python
+numpy>=2.0
+pillow
+pyyaml
+matplotlib
+requests
+python-dotenv
+pytest

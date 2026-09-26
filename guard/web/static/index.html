@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AD5M Guard</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--fg:#1b1c1f;--muted:#6b7079;--line:#dfe2e7;--ok:#1d8a4c;--warn:#b76b00;--bad:#c42f2a;--idle:#5b6473;--accent:#2563eb;--chip:#eef0f3}
+@media (prefers-color-scheme:dark){:root{--bg:#111215;--card:#1a1c20;--fg:#e7e8eb;--muted:#9ba1aa;--line:#2b2e34;--ok:#39c476;--warn:#e6a23b;--bad:#ef5a55;--idle:#8c95a4;--accent:#6ea0ff;--chip:#24272d}}
+:root{color-scheme:light dark}   /* системные элементы (выпадающие списки) — в теме страницы */
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--fg);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+h1{font-size:17px;margin:0}.sp{flex:1}
+.pill{padding:2px 10px;border-radius:999px;border:1px solid var(--line);font-size:13px}
+.btn{padding:6px 12px;border-radius:7px;border:1px solid var(--line);background:transparent;cursor:pointer}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger:hover{border-color:var(--bad);color:var(--bad)}.btn:disabled{opacity:.5;cursor:default}
+main{padding:16px}.empty{max-width:520px;margin:60px auto;text-align:center;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden;display:flex;flex-direction:column}
+.card.alert{border-color:var(--bad);box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 30%,transparent)}
+.card.off{opacity:.6}
+.top{display:flex;align-items:center;gap:8px;padding:8px 10px}.name{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:12px;padding:1px 8px;border-radius:6px;color:#fff;background:var(--idle);white-space:nowrap}
+.s-printing{background:var(--ok)}.s-paused,.s-pausing,.s-heating{background:var(--warn)}.s-error,.s-offline,.s-cancelled{background:var(--bad)}
+.shot{position:relative;aspect-ratio:4/3;background:#000;cursor:zoom-in}.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .none{position:absolute;inset:0;display:grid;place-items:center;color:#8a8f98;font-size:13px;text-align:center;padding:10px}
+.bar{height:4px;background:var(--line)}.bar>i{display:block;height:100%;background:var(--accent);transition:width .5s}
+.info{padding:8px 10px;display:grid;gap:5px;font-size:13px}.row{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}.chip{font-size:12px;padding:0 7px;border-radius:5px;background:var(--chip)}
+.chip.stop{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}.chip.note{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.err{color:var(--bad)}.muted{color:var(--muted)}
+.actions{display:flex;gap:6px;padding:0 10px 10px;flex-wrap:wrap}.actions .btn{flex:1;padding:5px 6px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);padding:0;width:min(560px,95vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dh{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}.dh h2{font-size:16px;margin:0;flex:1}
+.db{padding:14px 16px;display:grid;gap:10px;max-height:70vh;overflow:auto}.df{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
+label{display:grid;gap:3px;font-size:13px}label span{color:var(--muted)}
+input[type=text],input[type=password],input[type=number],select{padding:6px 8px;border-radius:7px;border:1px solid var(--line);background:transparent;width:100%}
+select,option{background:var(--card);color:var(--fg)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:8px}
+.note{padding:8px 10px;border-radius:8px;background:var(--chip);font-size:13px}
+.note.ok{background:color-mix(in srgb,var(--ok) 15%,transparent)}.note.bad{background:color-mix(in srgb,var(--bad) 15%,transparent)}
+details summary{cursor:pointer;color:var(--muted)}
+.events{display:grid;gap:6px}.ev{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.ev img{width:96px;border-radius:5px;cursor:zoom-in}.k-alert,.k-stopped,.k-error{color:var(--bad)}.k-manual{color:var(--accent)}
+#big{width:min(1100px,96vw)}#big img{width:100%;display:block}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:.95}
+</style>
+</head>
+<body>
+<header>
+  <h1>AD5M Guard</h1><span id="counts"></span><span class="sp"></span>
+  <span class="muted" id="meta"></span>
+  <button class="btn" onclick="openEvents()">Журнал</button>
+  <button class="btn" onclick="openSettings()">Настройки</button>
+  <button class="btn" onclick="openFind()">Найти в сети</button>
+  <button class="btn primary" onclick="openPrinter()">+ Принтер</button>
+</header>
+<main><div class="note bad" id="nodet" hidden style="margin-bottom:14px"><b>Распознавание брака выключено</b> — модели не загрузились,
+  печать сейчас никто не остановит. Управление и камеры работают. Причина — в журнале работы (папка данных → logs\guard.log).</div>
+<div class="grid" id="grid"></div><div class="empty" id="empty" hidden>
+  <h2>Принтеров пока нет</h2><p>Нажмите «+ Принтер», впишите IP-адрес и нажмите «Проверить подключение» — протокол, серийный номер и камера определятся сами.</p>
+  <button class="btn primary" onclick="openPrinter()">+ Добавить принтер</button></div></main>
+
+<dialog id="dPrinter"><form method="dialog" onsubmit="return false">
+  <div class="dh"><h2 id="pTitle">Принтер</h2><button class="btn" value="cancel" formnovalidate onclick="dPrinter.close()">✕</button></div>
+  <div class="db">
+    <div class="two"><label><span>Название</span><input type="text" id="pName" required placeholder="AD5M-01"></label>
+    <label><span>IP-адрес принтера</span><input type="text" id="pHost" required placeholder="192.168.0.108"></label></div>
+    <label><span>Протокол</span><select id="pProtocol">
+      <option value="auto">Определить автоматически</option>
+      <option value="flashforge">FlashForge — стоковая прошивка (HTTP 8898 / TCP 8899)</option>
+      <option value="moonraker">Klipper / Moonraker (ZMOD, Klipper Mod)</option></select></label>
+    <div class="two"><label><span>Код доступа (Настройки → Сеть → Только LAN) / ключ API Moonraker</span><input type="password" id="pCode" autocomplete="off"></label>
+    <label><span>Серийный номер (определится сам)</span><input type="text" id="pSerial"></label></div>
+    <label><span>Адрес камеры (пусто — по умолчанию)</span><input type="text" id="pCamera" placeholder="http://192.168.0.108:8080/?action=snapshot"></label>
+    <details><summary>Порты и прочее</summary><div class="db" style="padding:10px 0 0">
+      <div class="two"><label><span>HTTP (стоковая)</span><input type="number" id="pHttp" value="8898"></label>
+      <label><span>TCP (стоковая)</span><input type="number" id="pTcp" value="8899"></label></div>
+      <label><span>Moonraker</span><input type="number" id="pMoon" value="7125"></label>
+      <label class="check"><input type="checkbox" id="pEnabled" checked> Опрашивать принтер</label>
+      <label class="check"><input type="checkbox" id="pAi" checked> Распознавать брак</label>
+    </div></details>
+    <div class="note" id="pResult" hidden></div>
+  </div>
+  <div class="df"><button class="btn danger" id="pDelete" hidden onclick="deletePrinter()">Удалить</button><span class="sp"></span>
+    <button class="btn" onclick="testPrinter()" id="pTestBtn">Проверить подключение</button>
+    <button class="btn primary" onclick="savePrinter()">Сохранить</button></div>
+</form></dialog>
+
+<dialog id="dSettings"><form method="dialog" onsubmit="return false">
+  <div class="dh"><h2>Настройки</h2><button class="btn" onclick="dSettings.close()">✕</button></div>
+  <div class="db">
+    <label><span>При подтверждённом сбое</span><select id="sAction"><option value="pause">Поставить печать на паузу</option>
+      <option value="cancel">Отменить печать</option><option value="none">Только уведомить</option></select></label>
+    <div><span class="muted">Останавливать печать при:</span><div class="chips" id="sStop" style="margin-top:6px"></div></div>
+    <div><span class="muted">Только уведомлять при (остальное видно в панели без тревоги):</span><div class="chips" id="sNotify" style="margin-top:6px"></div></div>
+    <div class="two"><label><span>Порог уверенности модели (выше — меньше ложных)</span><input type="number" id="sConf" min="0.05" max="0.99" step="0.05"></label>
+    <label><span>Подтверждение: из последних N кадров</span><input type="number" id="sWindow" min="1" max="50"></label></div>
+    <div class="two"><label><span>…нужно кадров с проблемой</span><input type="number" id="sHits" min="1" max="50"></label>
+    <label><span>Опрос раз в, секунд</span><input type="number" id="sInterval" min="1" max="300"></label></div>
+    <label class="check"><input type="checkbox" id="sPlate"> Тревога, если пластина PEI не видна</label>
+    <div class="two"><label><span>Telegram: токен бота</span><input type="password" id="sTgToken" autocomplete="off"></label>
+    <label><span>Telegram: chat id</span><input type="text" id="sTgChat"></label></div>
+    <div class="two"><label><span>Хранить снимки тревог, дней</span><input type="number" id="sKeep" min="1" max="3650"></label>
+    <label><span>Кадров для обучения при тревоге (0 — не сохранять)</span><input type="number" id="sTrain" min="0" max="60"></label></div>
+    <div class="note" style="display:flex;gap:10px;align-items:center;justify-content:space-between"><span>Данные для дообучения: исходные кадры каждой тревоги и кадры до неё. Скачайте архив и отправьте разработчикам — модели станут точнее на ваших принтерах. <span class="muted" id="trainInfo"></span></span><a class="btn primary" href="/api/training/export?days=30" style="white-space:nowrap;text-decoration:none">Скачать данные для дообучения</a></div>
+    <div class="note" id="sResult" hidden></div>
+  </div>
+  <div class="df"><button class="btn" onclick="recommendedSettings()" title="Порог и подтверждение, откалиброванные для этой версии моделей">Рекомендуемые значения</button>
+    <button class="btn primary" onclick="saveSettings()">Сохранить</button></div>
+</form></dialog>
+
+<dialog id="dFind"><form method="dialog" onsubmit="return false">
+  <div class="dh"><h2>Принтеры в сети</h2><button class="btn" onclick="dFind.close()">✕</button></div>
+  <div class="db">
+    <div class="two"><label><span>Подсеть (пусто — сети этого компьютера)</span><input type="text" id="fSubnet" placeholder="например 192.168.1.0/24"></label>
+      <div style="align-self:end"><button class="btn primary" id="fBtn" onclick="startFind()">Искать</button></div></div>
+    <div class="muted" id="fStatus"></div>
+    <div class="events" id="fList"></div>
+  </div></form></dialog>
+
+<dialog id="dEvents"><div class="dh"><h2>Журнал</h2><button class="btn" onclick="dEvents.close()">✕</button></div>
+  <div class="db"><div class="events" id="events"></div></div></dialog>
+<dialog id="big" onclick="big.close()"><img id="bigImg" alt=""></dialog>
+<div id="toast"></div>
+
+<script>
+const ST={idle:"готов",printing:"печатает",pausing:"ставится на паузу",paused:"пауза",completed:"завершено",cancelled:"отменено",heating:"нагрев",busy:"занят",error:"ошибка",offline:"нет связи",unknown:"—",disabled:"отключён"};
+const CL={spaghetti:"спагетти",detached:"отрыв модели",warping:"коробление",cracks:"трещины",stringing:"струны",garbage:"мусор/сопли",plate_not_visible:"нет пластины",glass_plate:"стекло вместо PEI",pei_misplaced:"пластина криво",head_no_cover:"снят кожух",hand:"рука"};
+let S=null, editing=null, token=localStorage.getItem("guardToken")||"";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(t){$("toast").textContent=t;$("toast").classList.add("on");setTimeout(()=>$("toast").classList.remove("on"),2500)}
+async function api(method,url,body){
+  const r=await fetch(url,{method,headers:{"Content-Type":"application/json","X-Token":token},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===403&&S&&S.token_required){token=prompt("Токен панели:")||"";localStorage.setItem("guardToken",token);return api(method,url,body)}
+  if(!r.ok)throw new Error(j.error||r.statusText);return j;
+}
+const fmtT=s=>s==null?"":s>=3600?`${Math.floor(s/3600)} ч ${Math.round(s%3600/60)} мин`:`${Math.round(s/60)} мин`;
+function card(p){
+  const st=p.enabled?p.state.status:"disabled", s=p.state, prog=s.progress!=null?Math.round(s.progress*100):null;
+  const stop=S.settings.stop_on, muted=S.settings.muted;
+  const notify=S.settings.notify_on;const cls=x=>stop.includes(x)?"chip stop":notify.includes(x)?"chip note":"chip";
+  const alertNow=p.problems.some(x=>stop.includes(x))||p.stopped_by_guard;
+  const temps=s.nozzle_temp!=null?`сопло ${Math.round(s.nozzle_temp)}/${Math.round(s.nozzle_target||0)}° · стол ${Math.round(s.bed_temp??0)}/${Math.round(s.bed_target||0)}°`:"";
+  return `<div class="card${alertNow?" alert":""}${p.enabled?"":" off"}">
+  <div class="top"><span class="name" title="${esc(p.host)} · ${esc(p.protocol)}">${esc(p.name)}</span>
+   <span class="badge s-${esc(st)}">${esc(ST[st]||st)}</span><button class="btn" style="padding:2px 8px" onclick="openPrinter('${p.id}')">⚙</button></div>
+  <div class="shot" onclick="zoom('${p.id}')">${p.has_frame?`<img alt="" src="/api/frame/${p.id}.jpg?t=${encodeURIComponent(p.frame_at)}">`:`<div class="none">${p.camera_error?esc(p.camera_error):p.error?"нет связи с принтером":"кадра пока нет"}</div>`}</div>
+  <div class="bar"><i style="width:${prog??0}%"></i></div>
+  <div class="info">
+   ${p.error?`<div class="err">${esc(p.error)}</div>`:""}
+   ${s.file?`<div class="row"><span>${esc(s.file)}</span>${prog!=null?`<span>${prog}%</span>`:""}${s.layer!=null?`<span>слой ${s.layer}/${s.total_layers??"?"}</span>`:""}${s.remaining_s?`<span>осталось ${fmtT(s.remaining_s)}</span>`:""}</div>`:""}
+   ${temps?`<div class="row">${temps}</div>`:""}
+   ${p.problems.length?`<div class="chips">${p.problems.map(x=>`<span class="${cls(x)}">${esc(CL[x]||x)}</span>`).join("")}</div>`:(s.status==="printing"&&p.ai_enabled?`<div class="muted">проблем на кадре нет</div>`:"")}
+   ${p.last_alert?`<div class="row">тревога: ${esc(p.last_alert.split(", ").map(x=>CL[x]||x).join(", "))} · ${esc(p.last_alert_at.slice(11,16))}${p.stopped_by_guard?" · <b class='err'>печать остановлена</b>":""}</div>`:""}
+   ${!p.ai_enabled?`<div class="muted">распознавание выключено</div>`:""}
+  </div>
+  <div class="actions">
+   <button class="btn" onclick="ctl('${p.id}','pause')">Пауза</button><button class="btn" onclick="ctl('${p.id}','resume')">Продолжить</button>
+   <button class="btn danger" onclick="ctl('${p.id}','cancel','${esc(p.name)}')">Отменить</button><button class="btn" title="Подсветка" onclick="light('${p.id}',${s.light===false})">💡</button><button class="btn" title="Снимок для дообучения" onclick="trainShot('${p.id}')">📷</button>
+  </div></div>`;
+}
+async function refresh(){
+  try{S=await (await fetch("/api/state")).json()}catch(e){$("meta").textContent="нет связи с сервисом";return}
+  $("grid").innerHTML=S.printers.map(card).join("");$("empty").hidden=S.printers.length>0;
+  $("counts").innerHTML=Object.entries(S.counts).map(([k,v])=>`<span class="pill">${esc(ST[k]||k)}: ${v}</span>`).join(" ");
+  $("meta").textContent=`v${S.version} · цикл ${S.cycle}${S.last_cycle_ms!=null?` · ${Math.round(S.last_cycle_ms)} мс`:""}`;
+  const loading=S.detector_state==="loading";
+  $("nodet").hidden=!!S.detector&&!loading;$("nodet").className="note "+(loading?"":"bad");
+  $("nodet").innerHTML=loading?"Загружаю модели распознавания… (на слабом компьютере — до минуты; камеры и управление уже работают)"
+    :"<b>Распознавание брака выключено</b> — модели не загрузились, печать сейчас никто не остановит. Управление и камеры работают. Причина — в журнале работы (папка данных → logs\\guard.log).";
+}
+async function ctl(id,a,name){if(a==="cancel"&&!confirm(`Отменить печать на ${name}?`))return;
+  try{await api("POST",`/api/printers/${id}/control/${a}`);toast("Готово");refresh()}catch(e){toast(e.message)}}
+async function trainShot(id){
+  const note=prompt("Снимок для дообучения: сохраню этот кадр и несколько кадров до него.\n"+
+    "Что на кадре? Например: «пропущен брак», «ложная тревога», «всё нормально» (можно пусто)","");
+  if(note===null)return;
+  try{await api("POST",`/api/printers/${id}/snapshot`,{note});toast("Снимок сохранён в данные для дообучения")}catch(e){toast(e.message)}}
+async function light(id,on){try{await api("POST",`/api/printers/${id}/light/${on?"on":"off"}`);refresh()}catch(e){toast(e.message)}}
+function zoom(id){const p=S.printers.find(x=>x.id===id);if(!p||!p.has_frame)return;$("bigImg").src=`/api/frame/${id}.jpg?t=${Date.now()}`;big.showModal()}
+function formData(){return{name:$("pName").value,host:$("pHost").value,protocol:$("pProtocol").value,check_code:$("pCode").value,serial:$("pSerial").value,
+  camera_url:$("pCamera").value,http_port:+$("pHttp").value,tcp_port:+$("pTcp").value,moonraker_port:+$("pMoon").value,enabled:$("pEnabled").checked,ai_enabled:$("pAi").checked}}
+function result(el,text,ok){const n=$(el);n.hidden=false;n.className="note "+(ok?"ok":"bad");n.textContent=text}
+let findTimer=null, found=[];
+function openFind(){dFind.showModal();pollFind()}
+async function startFind(){
+  try{await api("POST","/api/discovery",{subnet:$("fSubnet").value.trim()||null});pollFind()}catch(e){$("fStatus").textContent="✗ "+e.message}}
+async function pollFind(){
+  clearTimeout(findTimer);if(!dFind.open)return;
+  let s;try{s=await api("GET","/api/discovery")}catch(e){$("fStatus").textContent="✗ "+e.message;return}
+  found=s.found;$("fBtn").disabled=s.running;
+  $("fStatus").textContent=s.running?`Ищу в ${s.subnets.join(", ")}… ${s.done} из ${s.total}`
+    :s.error?`✗ ${s.error}`:s.finished_at?`Готово (${s.finished_at}): новых принтеров ${s.found.length}${s.already_added?`, уже добавлены: ${s.already_added}`:""}`
+    :"Нажмите «Искать» — проверю адреса сети на портах FlashForge и Moonraker (несколько секунд).";
+  $("fList").innerHTML=s.found.map((f,i)=>`<div class="ev"><div><b>${esc(f.name||f.model||"Принтер")}</b><br><span class="muted">${esc(f.host)}</span></div>
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><span>${esc(f.model)} · ${f.protocol==="moonraker"?"Klipper / Moonraker":"FlashForge"}${f.serial?` · SN ${esc(f.serial)}`:""}${f.note?`<br><span class="muted">${esc(f.note)}</span>`:""}</span>
+    <button class="btn primary" onclick="addFound(${i})">Добавить</button></div></div>`).join("");
+  if(s.running)findTimer=setTimeout(pollFind,1000);
+}
+function addFound(i){const f=found[i];dFind.close();
+  // у всех AD5M из коробки имя «Adventurer 5M» — повторяющееся имя дополняем концом серийника (или IP)
+  let name=f.name||f.model||f.host;
+  if(S.printers.some(p=>p.name===name))name+=" "+(f.serial?f.serial.slice(-4):f.host);
+  openPrinter(null,{name,host:f.host,protocol:f.protocol,serial:f.serial,camera_url:f.camera_url})}
+function openPrinter(id,preset){
+  editing=id?S.printers.find(p=>p.id===id):null;const p=editing||{protocol:"auto",http_port:8898,tcp_port:8899,moonraker_port:7125,enabled:true,ai_enabled:true,...preset};
+  $("pTitle").textContent=editing?`Принтер ${editing.name}`:"Новый принтер";$("pDelete").hidden=!editing;$("pResult").hidden=true;
+  $("pName").value=p.name||"";$("pHost").value=p.host||"";$("pProtocol").value=p.protocol;$("pCode").value=p.check_code||"";$("pSerial").value=p.serial||"";
+  $("pCamera").value=p.camera_url||"";$("pHttp").value=p.http_port;$("pTcp").value=p.tcp_port;$("pMoon").value=p.moonraker_port;
+  $("pEnabled").checked=p.enabled;$("pAi").checked=p.ai_enabled;dPrinter.showModal();
+}
+async function testPrinter(){
+  $("pTestBtn").disabled=true;result("pResult","Проверяю…",true);
+  try{const r=await api("POST","/api/printers/test",{...formData(),id:editing?editing.id:null});
+    $("pProtocol").value=r.protocol;if(r.serial)$("pSerial").value=r.serial;if(!$("pCamera").value&&r.camera_url)$("pCamera").value=r.camera_url;
+    if(!$("pName").value&&r.name)$("pName").value=r.name;
+    result("pResult",`✓ Подключено: ${r.model||r.protocol}${r.firmware?", прошивка "+r.firmware:""}${r.serial?", SN "+r.serial:""}`,true);
+  }catch(e){result("pResult","✗ "+e.message,false)}finally{$("pTestBtn").disabled=false}
+}
+async function savePrinter(){
+  try{if(editing)await api("PUT",`/api/printers/${editing.id}`,formData());else await api("POST","/api/printers",formData());
+    dPrinter.close();toast("Сохранено");refresh()}catch(e){result("pResult","✗ "+e.message,false)}
+}
+async function deletePrinter(){if(!confirm(`Удалить принтер ${editing.name}?`))return;
+  try{await api("DELETE",`/api/printers/${editing.id}`);dPrinter.close();refresh()}catch(e){toast(e.message)}}
+function openSettings(){fillSettings(S.settings);dSettings.showModal();
+  api("GET","/api/training?days=30").then(t=>$("trainInfo").textContent=`За 30 дней: тревог ${t.alerts}, ${t.mb} МБ.`).catch(()=>{})}
+async function recommendedSettings(){
+  try{const d=await api("GET","/api/settings/defaults");
+    fillSettings({...S.settings,...d,telegram_token:$("sTgToken").value,telegram_chat_id:$("sTgChat").value,
+      interval_s:+$("sInterval").value,keep_alert_images_days:+$("sKeep").value,training_frames:+$("sTrain").value});
+    result("sResult","Подставлены рекомендуемые значения — нажмите «Сохранить»",true)}catch(e){toast(e.message)}}
+function fillSettings(s){
+  $("sResult").hidden=true;$("sAction").value=s.action;$("sConf").value=s.defect_conf;$("sWindow").value=s.window;$("sHits").value=s.min_hits;
+  $("sInterval").value=s.interval_s;$("sPlate").checked=s.check_plate;$("sTgToken").value=s.telegram_token;$("sTgChat").value=s.telegram_chat_id;$("sKeep").value=s.keep_alert_images_days;$("sTrain").value=s.training_frames;
+  const boxes=(list,sel)=>S.classes.map(c=>`<label class="check chip"><input type="checkbox" value="${c}" ${list.includes(c)?"checked":""}> ${esc(CL[c]||c)}</label>`).join("");
+  $("sStop").innerHTML=boxes(s.stop_on);$("sNotify").innerHTML=boxes(s.notify_on);
+}
+async function saveSettings(){
+  try{await api("PUT","/api/settings",{action:$("sAction").value,defect_conf:+$("sConf").value,window:+$("sWindow").value,min_hits:+$("sHits").value,
+    interval_s:+$("sInterval").value,check_plate:$("sPlate").checked,telegram_token:$("sTgToken").value,telegram_chat_id:$("sTgChat").value,
+    keep_alert_images_days:+$("sKeep").value,training_frames:+$("sTrain").value,stop_on:[...document.querySelectorAll("#sStop input:checked")].map(i=>i.value),
+    notify_on:[...document.querySelectorAll("#sNotify input:checked")].map(i=>i.value)});
+    dSettings.close();toast("Настройки сохранены");refresh()}catch(e){result("sResult","✗ "+e.message,false)}
+}
+async function openEvents(){
+
+  const ev=await (await fetch("/api/events?limit=200")).json();
+  $("events").innerHTML=ev.map(e=>`<div class="ev">${e.image?`<img src="/api/events/image/${encodeURIComponent(e.image)}" onclick="event.stopPropagation();$('bigImg').src=this.src;big.showModal()">`:"<span></span>"}
+    <div><span class="muted">${esc(e.when)}</span> <b>${esc(e.printer)}</b><br><span class="k-${esc(e.kind)}">${esc(e.detail.split(", ").map(x=>CL[x]||x).join(", "))}</span></div></div>`).join("")||`<div class="muted">пока пусто</div>`;
+  dEvents.showModal();
+}
+refresh();setInterval(()=>{if(!document.querySelector("dialog[open]"))refresh()},2000);
+</script>
+</body>
+</html>
