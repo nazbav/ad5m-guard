@@ -1,5 +1,10 @@
 # AD5M Guard
 
+[![Версия](https://img.shields.io/github/v/release/nazbav/ad5m-guard?label=версия)](https://github.com/nazbav/ad5m-guard/releases/latest)
+[![Скачивания](https://img.shields.io/github/downloads/nazbav/ad5m-guard/total?label=скачиваний)](https://github.com/nazbav/ad5m-guard/releases)
+[![Лицензия](https://img.shields.io/github/license/nazbav/ad5m-guard?label=лицензия)](LICENSE)
+![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)
+
 Программа для Windows, которая смотрит на ваши FlashForge Adventurer 5M через их же камеру
 и ставит печать на паузу, если что-то пошло не так: пластик начал сыпаться «спагетти»
 или деталь оторвалась от стола.
@@ -7,6 +12,8 @@
 Печать идёт часами, и сорванная деталь за это время превращается в ком пластика на весь стол.
 AD5M Guard замечает это примерно за минуту и останавливает принтер. Подойдёт и для одного
 принтера дома, и для фермы.
+
+![Панель AD5M Guard](docs/panel.png)
 
 ## Как начать
 
@@ -26,6 +33,25 @@ AD5M Guard замечает это примерно за минуту и ост�
 - стоковая прошивка и Klipper (ZMOD);
 - всё работает на вашем компьютере: без облака, без подписки, видеокарта не нужна.
 
+## Как программа решает остановить печать
+
+```mermaid
+flowchart LR
+    cam["📷 Камера принтера"] -->|кадр раз в 5 секунд| y["Модель 1<br/>YOLO26"]
+    cam --> r["Модель 2<br/>RF-DETR"]
+    y --> both{"Обе видят сбой<br/>на одном месте?"}
+    r --> both
+    both -->|нет| cam
+    both -->|да| confirm{"Повторилось<br/>3 раза из 5?"}
+    confirm -->|нет — возможно, блик| cam
+    confirm -->|да| stop["⏸ Пауза печати"]
+    stop --> note["Снимок в журнал<br/>и в Telegram"]
+```
+
+Чтобы не останавливать печать зря, программа ждёт, пока сбой увидят **обе** модели и
+**несколько раз подряд на том же месте**. Рука в кадре или тестовая полоска в начале печати —
+не повод для тревоги.
+
 ## Насколько точно
 
 На 96 часах записанных печатей — ни одной ложной остановки. Большой ком пластика ловит уверенно,
@@ -39,6 +65,20 @@ AD5M Guard замечает это примерно за минуту и ост�
 # Для разработчиков
 
 ## Устройство программы (`guard/`)
+
+```mermaid
+flowchart TB
+    subgraph app["guard/app — запуск, трей, одна копия"]
+        web["guard/web<br/>панель и HTTP API"]
+        svc["guard/services<br/>опрос парка, решения, поиск в сети"]
+    end
+    web --> svc
+    svc --> dom["guard/domain<br/>правило тревоги, объединение моделей"]
+    svc --> ports["guard/ports<br/>интерфейсы"]
+    adapters["guard/adapters<br/>FlashForge · Moonraker · камера · ONNX · SQLite · Telegram"] -. реализует .-> ports
+    adapters --> printer[("AD5M<br/>HTTP 8898 · TCP 8899 · Moonraker 7125 · камера 8080")]
+    emu["emulator<br/>виртуальные AD5M для тестов"] -. те же протоколы .-> printer
+```
 
 Панель-приложение для Windows (`AD5M-Guard.exe`): добавить принтер (адрес, код доступа,
 адрес камеры), видеть камеры и состояние парка, управлять печатью (пауза / продолжить /
